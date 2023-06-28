@@ -1,0 +1,57 @@
+const express = require("express");
+const { open } = require("sqlite");
+const path = require("path");
+const sqlite3 = require("sqlite3");
+
+const app = express();
+app.use(express.json());
+
+const databasePath = sqlite3.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "password",
+  database: "customers",
+});
+
+app.post("/api/addCustomer/", async (request, response) => {
+  const { phone_number } = request;
+
+  if (!phone_number) {
+    response.status(400);
+    response.send("Phone number is required");
+    return;
+  }
+
+  const addPhoneNumberQuery = `
+    select *
+    from customers
+    where phone_number = ?`;
+  databasePath.query(sql, values, (error, results) => {
+    if (error) {
+      response.status(500);
+      response.send(`${error.message}`);
+      return;
+    }
+    if (results.length > 0) {
+      response.status(400);
+      response.send("Phone number already exists");
+      return;
+    }
+
+    const addNumberQuery = `
+        insert into customers (phone_numbers)
+        values (?)`;
+
+    databasePath.query(sql, values, (error, results) => {
+      if (error) {
+        response.status(500);
+        response.send(`${error.message}`);
+      } else {
+        response.status(200);
+        response.send("Customer added successfully");
+      }
+    });
+  });
+});
+
+app.listen(3000);
